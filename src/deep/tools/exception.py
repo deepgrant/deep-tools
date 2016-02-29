@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+################################################################################
 #
 # The MIT License (MIT)
 #
@@ -21,6 +24,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+################################################################################
+
 class issue(Exception):
 
     def __init__(self, errorStr):
@@ -31,6 +36,8 @@ class issue(Exception):
 
     def __str__(self):
         return self.__repr__()
+
+################################################################################
 
 if __name__ == "__main__":
     pass
