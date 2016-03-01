@@ -161,7 +161,7 @@ class machine(object):
         for _trans in state.trans:
             state.trans[_trans].setContext(self.getContext())
 
-    def injectEvents(self, event):
+    def injectEvent(self, event):
         """
         Inject the specified event into the Machines current state.
         """
@@ -201,7 +201,7 @@ class machine(object):
                     # The run method can return a EVENT to inject into the FSM.
                     # Ergo this is a transitive event that may cause a
                     # FSM transition. Add this to the events list.
-                    events.append(_transitiveEvent)
+                    _events.append(_transitiveEvent)
 
         # Return the current state after all the events have been processed.
         return self.currentState
