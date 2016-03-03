@@ -35,8 +35,10 @@ setup(cmdclass     = {'install': post_install},
       description  = 'Deep Tools',
       author       = 'Deep Grant',
       author_email = 'ralph.wiggum@icloud.com',
+      url          = 'http://deepis.com',
       version      = '0.1',
-      packages     = ['deep.tools',
+      packages     = ['deep',
+                      'deep.tools',
                       ],
       scripts      = [
                       ]
