@@ -95,7 +95,8 @@ class DeepSQLSetup(object):
         if False == os.path.exists(_basedir):
             raise issue('Does not exist: %s' % (basedir,))
 
-        _temp    = string.Template('${bd}/THIRDPARTY/trunk/MySQL/deep/install/dist/${distribution}/usr/local/mysql')
+        _temp    = string.Template('${bd}/THIRDPARTY/trunk/MySQL/deep/install/'\
+                                   'dist/${distribution}/usr/local/mysql')
 
         self.__basedir = _temp.substitute(bd           = _basedir,
                                           distribution = self.__version,)
@@ -168,7 +169,7 @@ class DeepSQLSetup(object):
         _temp = string.Template('${basedir}/bin/mysqld '      \
                                 '--initialize-insecure '      \
                                 '--deep-dynamic-resources=1 ' \
-                                ' --basedir=${basedir} '      \
+                                '--basedir=${basedir} '       \
                                 '--datadir=${datadir}')
 
         _cmd  = _temp.substitute(basedir = self.__basedir,
