@@ -41,14 +41,6 @@ class issue(exception.issue):
         exception.issue.__init__(self, errorStr)
 
 
-#function clusterinitdb() {
-#  cdmysql "$1"
-#
-#  ./bin/mysqld --initialize-insecure --deep-dynamic-resources=1 --basedir="${PWD}" --datadir="${PWD}/data1"
-#  ./bin/mysqld --initialize-insecure --deep-dynamic-resources=1 --basedir="${PWD}" --datadir="${PWD}/data2"
-#  ./bin/mysqld --initialize-insecure --deep-dynamic-resources=1 --basedir="${PWD}" --datadir="${PWD}/data3"
-#}
-
 __cluster = """
 [ndbd default]
 noofreplicas=1
@@ -96,7 +88,7 @@ class DeepSQLSetup(object):
         self.__version = version
         self.__basedir = None
 
-    def setDevDir(self, basedir= '~/Development/deep/'):
+    def setDevDir(self, basedir= '~/Development/deep'):
 
         _basedir = os.path.expanduser(basedir)
 
@@ -150,7 +142,13 @@ class DeepSQLSetup(object):
 
         self.initdb(_data)
 
-        _temp = string.Template('${basedir}/bin/mysqld --socket=/tmp/mysql.sock --basedir="${basedir}" --datadir="${datadir}" --default-storage-engine=deep --deep_log_level_debug=ON --bind-address=0.0.0.0')
+        _temp = string.Template('${basedir}/bin/mysqld '         \
+                                '--socket=/tmp/mysql.sock '      \
+                                '--basedir="${basedir}" '        \
+                                '--datadir="${datadir}" '        \
+                                '--default-storage-engine=deep ' \
+                                '--deep_log_level_debug=ON '     \
+                                '--bind-address=0.0.0.0')
 
         _cmd  = _temp.substitute(basedir = self.__basedir,
                                  datadir = _data)
@@ -167,7 +165,11 @@ class DeepSQLSetup(object):
         if True == os.path.exists(datadir):
             return None
 
-        _temp = string.Template('${basedir}/bin/mysqld --initialize-insecure --deep-dynamic-resources=1 --basedir=${basedir} --datadir=${datadir}')
+        _temp = string.Template('${basedir}/bin/mysqld '      \
+                                '--initialize-insecure '      \
+                                '--deep-dynamic-resources=1 ' \
+                                ' --basedir=${basedir} '      \
+                                '--datadir=${datadir}')
 
         _cmd  = _temp.substitute(basedir = self.__basedir,
                                  datadir = datadir)
@@ -188,6 +190,7 @@ class DeepSQLSetup(object):
                                  port    = 3306,
                                  server  = 1)
 
+        print _my
         self.initdb(_data)
 
 ################################################################################
