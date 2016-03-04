@@ -26,9 +26,11 @@
 #
 ################################################################################
 
+import argparse
 import commands
 import os
 import shlex
+import shutil
 import subprocess
 import string
 import sys
@@ -39,44 +41,6 @@ import deep.tools.exception as exception
 class issue(exception.issue):
     def __init__(self, errorStr):
         exception.issue.__init__(self, errorStr)
-
-
-__cluster = """
-[ndbd default]
-noofreplicas=1
-
-[ndbd]
-hostname=localhost
-id=2
-
-[ndbd]
-hostname=localhost
-id=3
-
-[ndb_mgmd]
-id = 1
-hostname=localhost
-
-[mysqld]
-id=4
-hostname=localhost
-
-[mysqld]
-id=5
-hostname=localhost
-
-"""
-
-_my_conf = """
-[mysqld]
-ndb-nodeid=${node}
-ndbcluster
-datadir=${datadir}
-basedir=${basedir}
-port=${port}
-server-id=${server}
-log-bin
-"""
 
 class DeepSQLSetup(object):
     """
@@ -119,6 +83,10 @@ class DeepSQLSetup(object):
         """
         Execute and track the output of the subprocess.
         """
+        print 80*'#'
+        print command
+        print 80*'#'
+
         _proc = subprocess.Popen(command,
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT)
@@ -134,22 +102,23 @@ class DeepSQLSetup(object):
 
         return rc
 
-    def startdb(self):
+    def startdb(self, mysqlData, serverId):
         """
         Start a single DeepSQL daemon
         """
         # Initialize the datadir if it is not there.
-        _data = self.getDataDir()
+        _data = self.getDataDir(mysqlData)
 
-        self.initdb(_data)
+        self.initdb(_data, serverId)
 
-        _temp = string.Template('${basedir}/bin/mysqld '         \
-                                '--socket=/tmp/mysql.sock '      \
-                                '--basedir="${basedir}" '        \
-                                '--datadir="${datadir}" '        \
-                                '--default-storage-engine=deep ' \
-                                '--deep_log_level_debug=ON '     \
-                                '--bind-address=0.0.0.0')
+        _temp = string.Template('${basedir}/bin/mysqld '                \
+                                '--socket=/tmp/mysql.sock '             \
+                                '--basedir="${basedir}" '               \
+                                '--datadir="${datadir}" '               \
+                                '--default-storage-engine=deep '        \
+                                '--deep_log_level_debug=ON '            \
+                                '--bind-address=0.0.0.0 '               \
+        )
 
         _cmd  = _temp.substitute(basedir = self.__basedir,
                                  datadir = _data)
@@ -159,48 +128,82 @@ class DeepSQLSetup(object):
         return self._execute(_cmd)
 
 
-    def initdb(self, datadir):
+    def initdb(self, datadir, serverId):
         """
         Initialize the datadir
         """
         if True == os.path.exists(datadir):
             return None
 
-        _temp = string.Template('${basedir}/bin/mysqld '      \
-                                '--initialize-insecure '      \
-                                '--deep-dynamic-resources=1 ' \
-                                '--basedir=${basedir} '       \
-                                '--datadir=${datadir}')
+        _temp = string.Template('${basedir}/bin/mysqld '                \
+                                '--initialize-insecure '                \
+                                '--deep-dynamic-resources=1 '           \
+                                '--basedir=${basedir} '                 \
+                                '--datadir=${datadir} '                 \
+                                '--server-id=${server} '                \
+                                '--log-bin=${datadir}/mysql-bin.log '   \
+                                '--gtid-mode=ON '                       \
+                                '--enforce-gtid-consistency=ON '        \
+                                '--gtid-executed-compression-period=0 ' \
+        )
 
         _cmd  = _temp.substitute(basedir = self.__basedir,
-                                 datadir = datadir)
+                                 datadir = datadir,
+                                 server  = serverId)
 
         _cmd  = shlex.split(_cmd)
 
         return self._execute(_cmd)
 
-    def clusterCfg(self):
-        """
-        Configure a local MySQL cluster.
-        """
-        _data = self.getDataDir('data1')
-        _temp = string.Template(_my_conf)
-        _my   = _temp.substitute(basedir = self.__basedir,
-                                 datadir = _data,
-                                 node    = 4,
-                                 port    = 3306,
-                                 server  = 1)
-
-        print _my
-        self.initdb(_data)
 
 ################################################################################
 
+def main():
+    _parser = argparse.ArgumentParser(description='DeepSQL instance setup.')
+
+    _parser.add_argument('--server',
+                         action='store',
+                         dest='server',
+                         help='Server ID <int>',
+                         type=int,
+                         default=1)
+
+    _parser.add_argument('--rel',
+                         action='store',
+                         dest='version',
+                         help='DeepSQL version',
+                         default='deepsql-5.7.11')
+
+    _parser.add_argument('--data',
+                         action='store',
+                         dest='data',
+                         help='Data Store location for the DB files.',
+                         default='deepsql')
+
+    _parser.add_argument('--base',
+                         action='store',
+                         dest='base',
+                         help='Path to the base location for the DeepSQL installation.',
+                         default='~/Development/deep')
+
+    _parser.add_argument('--rm',
+                         action='store_true',
+                         help='Delete the data directory when DeepSQL exits.',
+                         default=False)
+
+    _args = _parser.parse_args()
+
+    _setup = DeepSQLSetup(_args.version)
+    _setup.setDevDir(_args.base)
+    _setup.startdb(_args.data,
+                   _args.server)
+
+    if True == _args.rm:
+        _pwd = _setup.getDataDir(_args.data)
+        if (True == os.path.exists(_pwd) and True == os.path.isdir(_pwd)):
+            shutil.rmtree(_pwd, ignore_errors=True)
+
+    sys.exit(0)
+
 if __name__ == "__main__":
-    _setup = DeepSQLSetup()
-    _setup.setDevDir()
-
-    #_cwd = _setup.getDataDir()
-    #_setup.startdb()
-
-    _setup.clusterCfg()
+    main()
