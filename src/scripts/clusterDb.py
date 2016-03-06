@@ -102,7 +102,7 @@ class DeepSQLSetup(object):
 
         return rc
 
-    def startdb(self, mysqlData, serverId):
+    def startdb(self, mysqlData, serverId, port):
         """
         Start a single DeepSQL daemon
         """
@@ -118,10 +118,12 @@ class DeepSQLSetup(object):
                                 '--default-storage-engine=deep '        \
                                 '--deep_log_level_debug=ON '            \
                                 '--bind-address=0.0.0.0 '               \
+                                '--port=${port} '                       \
         )
 
-        _cmd  = _temp.substitute(basedir = self.__basedir,
-                                 datadir = _data)
+        _cmd = _temp.substitute(basedir = self.__basedir,
+                                datadir = _data,
+                                port    = port)
 
         _cmd = shlex.split(_cmd)
 
@@ -191,12 +193,20 @@ def main():
                          help='Delete the data directory when DeepSQL exits.',
                          default=False)
 
+    _parser.add_argument('--port',
+                         action='store',
+                         dest='port',
+                         help='Change the DeepSQL server port.',
+                         type=int,
+                         default=3306)
+
     _args = _parser.parse_args()
 
     _setup = DeepSQLSetup(_args.version)
     _setup.setDevDir(_args.base)
     _setup.startdb(_args.data,
-                   _args.server)
+                   _args.server,
+                   _args.port)
 
     if True == _args.rm:
         _pwd = _setup.getDataDir(_args.data)
