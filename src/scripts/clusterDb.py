@@ -102,6 +102,21 @@ class DeepSQLSetup(object):
 
         return rc
 
+    def cli(self, mysqlData):
+        """
+        Start the MySQL CLI.
+        """
+        _temp = string.Template('${basedir}/bin/mysql '                 \
+                                '-u root '                              \
+                                '--socket=/tmp/${socket}.sock '         \
+        )
+
+        _cmd = _temp.substitute(basedir = self.__basedir,
+                                socket  = mysqlData)
+
+        os.system(_cmd)
+        return;
+
     def startdb(self, mysqlData, serverId, port):
         """
         Start a single DeepSQL daemon
@@ -112,7 +127,7 @@ class DeepSQLSetup(object):
         self.initdb(_data, serverId)
 
         _temp = string.Template('${basedir}/bin/mysqld '                \
-                                '--socket=/tmp/mysql.sock '             \
+                                '--socket=/tmp/${socket}.sock '         \
                                 '--basedir="${basedir}" '               \
                                 '--datadir="${datadir}" '               \
                                 '--default-storage-engine=deep '        \
@@ -123,7 +138,8 @@ class DeepSQLSetup(object):
 
         _cmd = _temp.substitute(basedir = self.__basedir,
                                 datadir = _data,
-                                port    = port)
+                                port    = port,
+                                socket  = mysqlData)
 
         _cmd = shlex.split(_cmd)
 
@@ -200,18 +216,28 @@ def main():
                          type=int,
                          default=3306)
 
+    _parser.add_argument('--cli',
+                         action='store_true',
+                         dest='cli',
+                         help='Login to the MySQL CLI instead of starting a DeepSQL server instance.',
+                         default=False)
+
     _args = _parser.parse_args()
 
     _setup = DeepSQLSetup(_args.version)
     _setup.setDevDir(_args.base)
-    _setup.startdb(_args.data,
-                   _args.server,
-                   _args.port)
 
-    if True == _args.rm:
-        _pwd = _setup.getDataDir(_args.data)
-        if (True == os.path.exists(_pwd) and True == os.path.isdir(_pwd)):
-            shutil.rmtree(_pwd, ignore_errors=True)
+    if False == _args.cli:
+        _setup.startdb(_args.data,
+                       _args.server,
+                       _args.port)
+
+        if True == _args.rm:
+            _pwd = _setup.getDataDir(_args.data)
+            if (True == os.path.exists(_pwd) and True == os.path.isdir(_pwd)):
+                shutil.rmtree(_pwd, ignore_errors=True)
+    else:
+        _setup.cli(_args.data)
 
     sys.exit(0)
 
