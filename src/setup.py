@@ -40,6 +40,6 @@ setup(cmdclass     = {'install': post_install},
       packages     = ['deep',
                       'deep.tools',
                       ],
-      scripts      = [
+      scripts      = ['scripts/clusterDb.py',
                       ]
       )
