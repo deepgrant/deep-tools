@@ -117,7 +117,7 @@ class DeepSQLSetup(object):
         os.system(_cmd)
         return;
 
-    def startdb(self, mysqlData, serverId, port):
+    def startdb(self, mysqlData, serverId, port, slave, db):
         """
         Start a single DeepSQL daemon
         """
@@ -125,6 +125,13 @@ class DeepSQLSetup(object):
         _data = self.getDataDir(mysqlData)
 
         self.initdb(_data, serverId)
+
+        if True == slave:
+            _tSM = string.Template('--binlog_do_db=${db} --replicate-do-db=${db} ')
+            _db  = _tSM.substitute(db = db)
+        else:
+            _tSM = string.Template('--binlog_do_db=${db}' )
+            _db  = _tSM.substitute(db = db)
 
         _temp = string.Template('${basedir}/bin/mysqld '                \
                                 '--socket=/tmp/${socket}.sock '         \
@@ -134,12 +141,21 @@ class DeepSQLSetup(object):
                                 '--deep_log_level_debug=ON '            \
                                 '--bind-address=0.0.0.0 '               \
                                 '--port=${port} '                       \
+                                '--server-id=${server} '                \
+                                '--log-bin=${datadir}/mysql-bin.log '   \
+                                '--gtid-mode=ON '                       \
+                                '--enforce-gtid-consistency=ON '        \
+                                '--gtid-executed-compression-period=0 ' \
+                                '${db} '                                \
+                                '--relay-log=${datadir}/mysql-relay-bin.log '
         )
 
         _cmd = _temp.substitute(basedir = self.__basedir,
                                 datadir = _data,
                                 port    = port,
-                                socket  = mysqlData)
+                                socket  = mysqlData,
+                                server  = serverId,
+                                db      = _db)
 
         _cmd = shlex.split(_cmd)
 
@@ -222,15 +238,28 @@ def main():
                          help='Login to the MySQL CLI instead of starting a DeepSQL server instance.',
                          default=False)
 
-    _args = _parser.parse_args()
+    _parser.add_argument('--slave',
+                         action='store_true',
+                         dest='slave',
+                         help='Setting up this is a slave. If not specified then assume \'master\'',
+                         default=False)
 
+    _parser.add_argument('--db',
+                         action='store',
+                         dest='db',
+                         help='The database to replicate.',
+                         default='test')
+
+    _args  = _parser.parse_args()
     _setup = DeepSQLSetup(_args.version)
     _setup.setDevDir(_args.base)
 
     if False == _args.cli:
         _setup.startdb(_args.data,
                        _args.server,
-                       _args.port)
+                       _args.port,
+                       _args.slave,
+                       _args.db)
 
         if True == _args.rm:
             _pwd = _setup.getDataDir(_args.data)
