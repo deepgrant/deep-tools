@@ -142,6 +142,8 @@ class DeepSQLSetup(object):
                                 '--bind-address=0.0.0.0 '               \
                                 '--port=${port} '                       \
                                 '--server-id=${server} '                \
+                                '--master-info-repository=TABLE '       \
+                                '--relay_log_info_repository=TABLE '    \
                                 '--log-bin=${datadir}/mysql-bin.log '   \
                                 '--gtid-mode=ON '                       \
                                 '--enforce-gtid-consistency=ON '        \
