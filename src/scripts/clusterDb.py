@@ -239,20 +239,8 @@ class DeepSQLSetup(object):
 def main():
     _parser = argparse.ArgumentParser(description='DeepSQL instance setup.')
 
-    _parser.add_argument('--server',
-                         action='store',
-                         dest='server',
-                         help='Server ID <int>',
-                         type=int,
-                         default=1)
-
-    _parser.add_argument('--rel',
-                         action='store',
-                         dest='version',
-                         help='DeepSQL version',
-                         default='deepsql-5.7.11')
-
     _parser.add_argument('--data',
+                         required=True,
                          action='store',
                          dest='data',
                          help='Data Store location for the DB files.',
@@ -264,10 +252,11 @@ def main():
                          help='Path to the base location for the DeepSQL installation.',
                          default='~/Development/deep')
 
-    _parser.add_argument('--rm',
-                         action='store_true',
-                         help='Delete the data directory when DeepSQL exits.',
-                         default=False)
+    _parser.add_argument('--db',
+                         action='store',
+                         dest='db',
+                         help='The database to replicate.',
+                         default='test')
 
     _parser.add_argument('--port',
                          action='store',
@@ -276,10 +265,37 @@ def main():
                          type=int,
                          default=3306)
 
+    _parser.add_argument('--rel',
+                         action='store',
+                         dest='version',
+                         help='DeepSQL version',
+                         default='deepsql-5.7.11')
+
+    _parser.add_argument('--server',
+                         action='store',
+                         dest='server',
+                         help='Server ID <int>',
+                         type=int,
+                         default=1)
+
+    _parser.add_argument('--snapshot',
+                         action='store',
+                         dest='snapshot',
+                         help='Dump the MySQL databases of the data directory to a SQL file',
+                         default=None)
+
+    #
+    # Boolean Parameters
+    #
     _parser.add_argument('--cli',
                          action='store_true',
                          dest='cli',
                          help='Login to the MySQL CLI instead of starting a DeepSQL server instance.',
+                         default=False)
+
+    _parser.add_argument('--rm',
+                         action='store_true',
+                         help='Delete the data directory when DeepSQL exits.',
                          default=False)
 
     _parser.add_argument('--slave',
@@ -287,18 +303,6 @@ def main():
                          dest='slave',
                          help='Setting up this is a slave. If not specified then assume \'master\'',
                          default=False)
-
-    _parser.add_argument('--db',
-                         action='store',
-                         dest='db',
-                         help='The database to replicate.',
-                         default='test')
-
-    _parser.add_argument('--snapshot',
-                         action='store',
-                         dest='snapshot',
-                         help='Dump the MySQL databases of the data directory to a SQL file',
-                         default=None)
 
     _args  = _parser.parse_args()
     _setup = DeepSQLSetup(_args.version)
