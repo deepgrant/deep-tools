@@ -102,6 +102,25 @@ class DeepSQLSetup(object):
 
         return rc
 
+    def _executeDumpOutput(self, command, outFile):
+        """
+        Execute the command and write the STDOUT to a file.
+        """
+        print 80*'#'
+        print command
+        print 80*'#'
+
+        _proc = subprocess.Popen(args   = command,
+                                 shell  = True,
+                                 stdout = subprocess.PIPE,
+                                 stderr = subprocess.STDOUT)
+
+        _out = _proc.communicate()[0]
+
+        _outfile = open(outFile, 'w')
+        _outfile.write(_out)
+        _outfile.close()
+
     def cli(self, mysqlData):
         """
         Start the MySQL CLI.
@@ -192,6 +211,29 @@ class DeepSQLSetup(object):
         return self._execute(_cmd)
 
 
+    def dumpMasterDb(self, mysqlData, snapshot):
+        """
+        Dump the master DB database to a snapshot SQL file.
+        """
+        _temp = string.Template('${basedir}/bin/mysqldump '             \
+                                '-u root '                              \
+                                '--socket=/tmp/${socket}.sock '         \
+                                '--all-databases '                      \
+                                '--flush-privileges '                   \
+                                '--single-transaction '                 \
+                                '--master-data=2 '                      \
+                                '--flush-logs '                         \
+                                '--triggers '                           \
+                                '--routines '                           \
+                                '--events '                             \
+                                '--hex-blob '                           \
+        )
+
+        _cmd = _temp.substitute(socket   = mysqlData,
+                                basedir  = self.__basedir)
+
+        return self._executeDumpOutput(_cmd, snapshot)
+
 ################################################################################
 
 def main():
@@ -252,21 +294,33 @@ def main():
                          help='The database to replicate.',
                          default='test')
 
+    _parser.add_argument('--snapshot',
+                         action='store',
+                         dest='snapshot',
+                         help='Dump the MySQL databases of the data directory to a SQL file',
+                         default=None)
+
     _args  = _parser.parse_args()
     _setup = DeepSQLSetup(_args.version)
     _setup.setDevDir(_args.base)
 
     if False == _args.cli:
-        _setup.startdb(_args.data,
-                       _args.server,
-                       _args.port,
-                       _args.slave,
-                       _args.db)
+        if None != _args.snapshot:
+            _snapshot = os.path.expanduser(_args.snapshot)
 
-        if True == _args.rm:
-            _pwd = _setup.getDataDir(_args.data)
-            if (True == os.path.exists(_pwd) and True == os.path.isdir(_pwd)):
-                shutil.rmtree(_pwd, ignore_errors=True)
+            _setup.dumpMasterDb(_args.data,
+                                _snapshot)
+        else:
+            _setup.startdb(_args.data,
+                           _args.server,
+                           _args.port,
+                           _args.slave,
+                           _args.db)
+
+            if True == _args.rm:
+                _pwd = _setup.getDataDir(_args.data)
+                if (True == os.path.exists(_pwd) and True == os.path.isdir(_pwd)):
+                    shutil.rmtree(_pwd, ignore_errors=True)
     else:
         _setup.cli(_args.data)
 
