@@ -146,8 +146,9 @@ class DeepSQLSetup(object):
         self.initdb(_data, serverId)
 
         if True == slave:
-            _tSM = string.Template('--binlog_do_db=${db} --replicate-do-db=${db} ')
-            _db  = _tSM.substitute(db = db)
+            _tSM = string.Template('--binlog_do_db=${db} --replicate-do-db=${db} --relay-log=${datadir}/mysql-relay-bin.log ')
+            _db  = _tSM.substitute(db = db,
+                                   datadir = _data)
         else:
             _tSM = string.Template('--binlog_do_db=${db}' )
             _db  = _tSM.substitute(db = db)
@@ -167,8 +168,10 @@ class DeepSQLSetup(object):
                                 '--gtid-mode=ON '                       \
                                 '--enforce-gtid-consistency=ON '        \
                                 '--gtid-executed-compression-period=0 ' \
+                                '--binlog-format=ROW '                  \
+                                '--binlog-checksum=CRC32 '              \
                                 '${db} '                                \
-                                '--relay-log=${datadir}/mysql-relay-bin.log '
+
         )
 
         _cmd = _temp.substitute(basedir = self.__basedir,
