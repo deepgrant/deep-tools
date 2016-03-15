@@ -121,6 +121,23 @@ class DeepSQLSetup(object):
         _outfile.write(_out)
         _outfile.close()
 
+    def _executeImport(self, command, inFile):
+        """
+        Execute the command and read a file via STDIN.
+        """
+        print 80*'#'
+        print '[%s] %s' % (inFile, command,)
+        print 80*'#'
+
+        _file = open(inFile, 'r')
+
+        _proc = subprocess.Popen(args   = command,
+                                 shell  = True,
+                                 stdin  = _file)
+        _proc.wait()
+
+        _file.close()
+
     def cli(self, mysqlData):
         """
         Start the MySQL CLI.
@@ -237,6 +254,20 @@ class DeepSQLSetup(object):
 
         return self._executeDumpOutput(_cmd, snapshot)
 
+    def loadSnapshot(self, mysqlData, snapshot):
+        """
+        Load a snapshot SQL file.
+        """
+        _temp = string.Template('${basedir}/bin/mysql '                 \
+                                '-u root '                              \
+                                '--socket=/tmp/${socket}.sock '         \
+        )
+
+        _cmd = _temp.substitute(socket   = mysqlData,
+                                basedir  = self.__basedir)
+
+        return self._executeImport(_cmd, snapshot)
+
 ################################################################################
 
 def main():
@@ -281,11 +312,22 @@ def main():
                          type=int,
                          default=1)
 
-    _parser.add_argument('--snapshot',
-                         action='store',
-                         dest='snapshot',
-                         help='Dump the MySQL databases of the data directory to a SQL file',
-                         default=None)
+    #
+    # Mutex options
+    #
+    _group = _parser.add_mutually_exclusive_group()
+
+    _group.add_argument('--snapshot',
+                        action='store',
+                        dest='snapshot',
+                        help='Dump the MySQL databases of the data directory to a SQL file',
+                        default=None)
+
+    _group.add_argument('--load',
+                        action='store',
+                        dest='load',
+                        help='Load a snapshot to the SQL instance.',
+                        default=None)
 
     #
     # Boolean Parameters
@@ -317,6 +359,13 @@ def main():
 
             _setup.dumpMasterDb(_args.data,
                                 _snapshot)
+
+        elif None != _args.load:
+            _load = os.path.expanduser(_args.load)
+
+            _setup.loadSnapshot(_args.data,
+                                _load)
+
         else:
             _setup.startdb(_args.data,
                            _args.server,
