@@ -110,12 +110,28 @@ class binArray(object):
 
         return _pck.unpack(binaryArray)
 
-def sizeof(num, suffix='B'):
-    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+def _sizeof(num, suffix='B'):
+    """
+    Give the value 'num', coverts this to a MiB, GiB, etc human understandable value.
+    Note: by changing suffix to 'b' we can render 'bits.
+    """
+    for _unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
         if abs(num) < 1024.0:
-            return "%3.1f%s%s" % (num, unit, suffix)
+            return "%3.1f%s%s" % (num, _unit, suffix)
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
+
+def humanizeBytes(num):
+    """
+    Humanize the numeric value to a string that can be MiB, KiB, GiB, etc.
+    """
+    return _sizeof(num, suffix='B')
+
+def humanizeBits(num):
+    """
+    Humanize the numeric value to a string that can be Mib, Kib, Gib, etc.
+    """
+    return _sizeof(num, suffix='b')
 
 if __name__ == "__main__":
     _array = binArray()
