@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+__copyright__ = """
 ################################################################################
 #
 # The MIT License (MIT)
@@ -25,6 +26,9 @@
 # SOFTWARE.
 #
 ################################################################################
+"""
+
+__author__ = "Deep Grant"
 
 import exception
 
@@ -52,7 +56,9 @@ def eventIdToName(hashId):
     return _eventIdToName[hashId]
 
 class event(object):
-
+    """
+    Base Event Object needed to transition between states.
+    """
     def __init__(self):
         _eventIdToName[self.__hash__()] = self.__repr__()
 

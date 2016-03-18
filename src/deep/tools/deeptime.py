@@ -47,7 +47,7 @@ class monotonic(object):
     """
     A Simple class to access the monotonic clock and return the counter.
     Simple divisors provided to convert the counter into
-    SECONDS, mILLISECONDS, etc.
+    SECONDS, MILLISECONDS, etc.
     """
     CLOCK_RAW = 4
 
