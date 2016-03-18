@@ -110,6 +110,13 @@ class binArray(object):
 
         return _pck.unpack(binaryArray)
 
+def sizeof(num, suffix='B'):
+    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        if abs(num) < 1024.0:
+            return "%3.1f%s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f%s%s" % (num, 'Yi', suffix)
+
 if __name__ == "__main__":
     _array = binArray()
     _val   = _array.encode(1,2,3,4)
@@ -130,7 +137,7 @@ if __name__ == "__main__":
     _elems = 1024*(255,)
     _val3  = _array.encode(*_elems)
 
-    print _val3
+    print _val3, len(_val3[1])
 
     _x = _array.decode(_val3[0], _val3[1])
     print _x
