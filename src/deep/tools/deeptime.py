@@ -67,8 +67,8 @@ class monotonic(object):
 
     def time(self):
         """
-        Return the monotonic time in a 7=64bit Integer.
-        Raises an OSError exception upoine failure.
+        Return the monotonic time in a 64bit Integer.
+        Raises an OSError exception upon failure.
         """
         _mtime = _monotime()
 
