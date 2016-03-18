@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__copyright__ = """
+__copyright__ = """ MIT License
 ################################################################################
 #
 # The MIT License (MIT)
