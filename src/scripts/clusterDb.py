@@ -226,7 +226,7 @@ class DeepSQLSetup(object):
         if False == os.path.exists(_basedir):
             raise issue('Does not exist: %s' % (basedir,))
 
-        _temp    = string.Template('${bd}/THIRDPARTY/trunk/MySQL/deep/install/'\
+        _temp    = string.Template('${bd}/RELATIONAL/MySQL/deep/install/'\
                                    'dist/${distribution}/usr/local/mysql')
 
         self.__basedir = _temp.substitute(bd           = _basedir,
